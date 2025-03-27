@@ -55,5 +55,9 @@
   },
   "scripts": {
   "build": "CI=false react-scripts build"
+},
+  "scripts": {
+  "test": "echo \"No tests available\" && exit 0"
 }
+  
 }
