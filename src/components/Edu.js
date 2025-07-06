@@ -91,10 +91,11 @@ const EducationCertifications = () => {
   const connectingLineVariants = {
     hidden: { width: 0 },
     visible: {
-      width: "100%",
+      width: "calc(50% - 2rem)",
       transition: {
         duration: 1,
-        ease: "easeInOut"
+        ease: "easeInOut",
+        delay: 0.7
       }
     }
   };
@@ -144,6 +145,13 @@ const EducationCertifications = () => {
                   className="hidden md:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full bg-primary-500 border-4 border-gray-900 z-10"
                   whileHover={{ scale: 1.3 }}
                 ></motion.div>
+
+                {/* Connecting line */}
+                <motion.div
+                  className={`hidden md:block absolute top-3 h-0.5 bg-gradient-to-${index % 2 === 0 ? 'l' : 'r'} from-primary-500 to-transparent`}
+                  style={index % 2 === 0 ? { right: 'calc(50% + 1.5rem)' } : { left: 'calc(50% + 1.5rem)' }}
+                  variants={connectingLineVariants}
+                />
                 
                 {/* Content */}
                 <div className={`md:w-1/2 ${index % 2 === 0 ? 'md:pr-16 md:text-right' : 'md:pl-16'}`}>
@@ -180,30 +188,33 @@ const EducationCertifications = () => {
                 whileHover={{ 
                   scale: 1.05,
                   y: -10,
+                  boxShadow: '0 0 35px rgba(59, 130, 246, 0.4)',
                   transition: { type: "spring", stiffness: 200 }
                 }}
-                className="card hover:shadow-neon transition-all duration-300 p-8"
+                className="bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50 p-8 transition-all duration-300 overflow-hidden"
               >
-                <div className="bg-gradient-to-r from-primary-500/10 to-secondary-500/10 rounded-lg p-6">
-                  <h4 className="text-2xl font-bold text-white mb-4">{cert.name}</h4>
-                  <h5 className="text-xl font-semibold text-primary-400 mb-4">{cert.issuer}</h5>
-                  <p className="text-gray-300 mb-6 text-lg">{cert.description}</p>
-                  <a 
-                    href={cert.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-primary-400 hover:text-primary-300 transition-colors duration-300 text-lg"
+                <h4 className="text-2xl font-bold text-white mb-4">{cert.name}</h4>
+                <h5 className="text-xl font-semibold text-primary-400 mb-4">{cert.issuer}</h5>
+                <p className="text-gray-300 mb-6 text-lg">{cert.description}</p>
+                <a 
+                  href={cert.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center text-primary-400 hover:text-primary-300 transition-colors duration-300 text-lg"
+                >
+                  View Certificate 
+                  <motion.span 
+                    className="ml-2 transition-transform duration-300 group-hover:translate-x-2"
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
                   >
-                    View Certificate 
-                    <motion.span 
-                      className="ml-2"
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
-                    >
-                      →
-                    </motion.span>
-                  </a>
-                </div>
+                    →
+                  </motion.span>
+                </a>
               </motion.div>
             ))}
           </div>

@@ -485,8 +485,8 @@ const Hero = () => {
   }, []);
 
   // Calculate text movement based on mouse position
-  const textX = mousePosition.x * 20; // Movement amount in pixels
-  const textY = mousePosition.y * 20;
+  const textX = mousePosition.x * 30; // Increased movement range
+  const textY = mousePosition.y * 30; // Increased movement range
   
   // Define social icon variants for enhanced hover effects
   const socialIconVariants = {
@@ -547,7 +547,7 @@ const Hero = () => {
           transition={{ duration: 1.2, delay: 0.5 }}
           style={{ 
             transform: `translate(${textX}px, ${textY}px)`,
-            transition: 'transform 0.1s ease' // Simplified easing function
+            transition: 'transform 0.1s linear' // Changed easing to linear for smoother tracking
           }}
         >
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500 mb-4 tracking-tight">
@@ -560,9 +560,9 @@ const Hero = () => {
           
           {/* Enhanced Social Links with Updated URLs */}
           <motion.div 
-            className="flex space-x-12 mt-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            className="flex space-x-12 mt-8 p-2 rounded-full bg-black/10 backdrop-blur-sm" // Added subtle background
+            initial={{ opacity: 0, y: 20 }} // Added y offset for entry animation
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.2, duration: 0.8 }}
           >
             <motion.a 
