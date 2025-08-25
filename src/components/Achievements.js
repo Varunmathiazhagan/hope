@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FiAward, FiStar, FiZap, FiTarget, FiThumbsUp, FiFlag } from 'react-icons/fi';
+import { FiAward, FiStar, FiTarget, FiThumbsUp, FiFlag } from 'react-icons/fi';
 import { useInView } from 'react-intersection-observer';
 
 const achievementsData = [
