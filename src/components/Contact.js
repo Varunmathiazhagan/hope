@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiMapPin, FiMail, FiPhone, FiLinkedin, FiGithub, FiInstagram } from 'react-icons/fi';
+import { useForm, ValidationError } from '@formspree/react';
 
 const Contact = () => {
+  const [state, handleFormspreeSubmit] = useForm("mqadzvzd");
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     subject: '',
     message: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null);
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
@@ -68,28 +68,17 @@ const Contact = () => {
     
     if (!validateForm()) return;
     
-    setIsSubmitting(true);
+    // Submit to Formspree
+    await handleFormspreeSubmit(e);
     
-    try {
-      // Simulate form submission
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setSubmitStatus('success');
+    // Clear form on successful submission
+    if (state.succeeded) {
       setFormData({
         name: '',
         email: '',
         subject: '',
         message: ''
       });
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      setSubmitStatus('error');
-    } finally {
-      setIsSubmitting(false);
-      
-      // Reset status after 5 seconds
-      setTimeout(() => {
-        setSubmitStatus(null);
-      }, 5000);
     }
   };
 
@@ -164,7 +153,7 @@ const Contact = () => {
                 <FiMail className="mr-2" /> Send a Message
               </h3>
               
-              {submitStatus === 'success' && (
+              {state.succeeded && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -177,7 +166,7 @@ const Contact = () => {
                 </motion.div>
               )}
               
-              {submitStatus === 'error' && (
+              {state.errors && state.errors.length > 0 && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -216,6 +205,12 @@ const Contact = () => {
                     className={`w-full px-4 py-3 bg-gray-800/60 border ${errors.email ? 'border-red-500' : 'border-gray-700'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-300 transition-all`}
                     placeholder="Your Email"
                   />
+                  <ValidationError 
+                    prefix="Email" 
+                    field="email"
+                    errors={state.errors}
+                    className="text-red-500 text-sm mt-1"
+                  />
                   {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                 </div>
                 
@@ -244,15 +239,21 @@ const Contact = () => {
                     className={`w-full px-4 py-3 bg-gray-800/60 border ${errors.message ? 'border-red-500' : 'border-gray-700'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-300 transition-all`}
                     placeholder="Your Message"
                   ></textarea>
+                  <ValidationError 
+                    prefix="Message" 
+                    field="message"
+                    errors={state.errors}
+                    className="text-red-500 text-sm mt-1"
+                  />
                   {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message}</p>}
                 </div>
                 
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className={`btn-primary w-full flex items-center justify-center transform hover:translate-y-[-2px] hover:shadow-lg transition-all ${isSubmitting ? 'opacity-75 cursor-not-allowed' : ''}`}
+                  disabled={state.submitting}
+                  className={`btn-primary w-full flex items-center justify-center transform hover:translate-y-[-2px] hover:shadow-lg transition-all ${state.submitting ? 'opacity-75 cursor-not-allowed' : ''}`}
                 >
-                  {isSubmitting ? (
+                  {state.submitting ? (
                     <>
                       <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
