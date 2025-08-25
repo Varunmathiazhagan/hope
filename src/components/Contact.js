@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiMapPin, FiMail, FiPhone, FiLinkedin, FiGithub, FiInstagram } from 'react-icons/fi';
 import { useForm, ValidationError } from '@formspree/react';
-import { Analytics } from "@vercel/analytics/react";
 
 const Contact = () => {
   const [state, handleFormspreeSubmit] = useForm("mqadzvzd");
@@ -122,7 +121,6 @@ const Contact = () => {
 
   return (
     <section id="contact" className="py-20 bg-dark relative">
-      <Analytics />
       <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-gray-900 to-transparent z-10"></div>
       
       {/* Decorative elements */}
