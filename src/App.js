@@ -7,7 +7,6 @@ import About from './components/About';
 import Skills from './components/Skills';
 import Projects from './components/Projects';
 import EducationCertifications from './components/Edu';
-import Achievements from './components/Achievements';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import './App.css';
@@ -73,7 +72,6 @@ function App() {
         <Skills />
         <Projects />
         <EducationCertifications />
-        <Achievements />
         <Contact />
       </main>
       
