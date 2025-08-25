@@ -1085,7 +1085,7 @@ const Projects = () => {
                     whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(59, 130, 246, 0.5)" }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <FiGithub /> View Source Code
+                    <FiGithub /> View Source Code.
                   </motion.a>
                   <motion.a 
                     href={selectedProject.demo}
