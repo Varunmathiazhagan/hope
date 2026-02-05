@@ -1,7 +1,3 @@
-/**
- * Enhanced Smooth Scrolling Utility with simplified approach to prevent glitches
- */
-
 import { easings } from './easings';
 
 /**
@@ -19,8 +15,20 @@ export const initSmoothScroll = () => {
   // Setup scroll progress indicator
   const progressBar = setupScrollProgressIndicator();
   
+  const { progressBar, updateScrollProgress } = setupScrollProgressIndicator();
+
   // Setup element reveal animations
   const observer = setupIntersectionObserver();
+
+  // Don't use intensive scroll behavior on mobile
+  if (window.innerWidth < 768) {
+    return {
+      observer,
+      progressBar,
+      updateScrollProgress,
+      handleAnchorClick: null
+    };
+  }
   
   // Handle hash links on page load
   if (window.location.hash) {
@@ -38,6 +46,7 @@ export const initSmoothScroll = () => {
   return {
     observer,
     progressBar,
+    updateScrollProgress,
     handleAnchorClick
   };
 };
@@ -64,6 +73,7 @@ export const setupScrollProgressIndicator = () => {
       const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
       const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
       const scrollPercentage = Math.max(0, Math.min(100, (scrollTop / height) * 100));
+      const scrollPercentage = height > 0 ? Math.max(0, Math.min(100, (scrollTop / height) * 100)) : 0;
       progressBar.style.width = `${scrollPercentage}%`;
     };
     
@@ -71,8 +81,10 @@ export const setupScrollProgressIndicator = () => {
     updateScrollProgress(); // Initial call
     
     return progressBar;
+    return { progressBar, updateScrollProgress };
   }
   return null;
+  return { progressBar: null, updateScrollProgress: null };
 };
 
 /**
@@ -98,33 +110,7 @@ export const setupIntersectionObserver = () => {
         entry.target.classList.remove('active');
       }
     });
-  }, options);
-
-  // Target all elements that should be animated
-  document.querySelectorAll('.reveal-on-scroll').forEach(el => {
-    observer.observe(el);
-  });
-
-  return observer;
-};
-
-/**
- * Smoothly scroll to element
- * @param {string} selector - The CSS selector of the target element
- * @param {number} offset - Offset in pixels
- * @param {number} duration - Animation duration in milliseconds
- */
-export const scrollToElement = (selector, offset = 0, duration = 800) => {
-  const target = document.querySelector(selector);
-  if (!target) return;
-  
-  const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
-  const startPosition = window.pageYOffset;
-  const distance = targetPosition - startPosition;
-  
-  let startTime = null;
-  
-  function animation(currentTime) {
+@@ -128,34 +132,36 @@ export const scrollToElement = (selector, offset = 0, duration = 800) => {
     if (startTime === null) startTime = currentTime;
     const timeElapsed = currentTime - startTime;
     const scrollY = easings.easeOutQuart(timeElapsed, startPosition, distance, duration);
@@ -153,6 +139,11 @@ export const destroySmoothScroll = (instance) => {
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.removeEventListener('click', instance.handleAnchorClick);
   });
+  if (instance.handleAnchorClick) {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.removeEventListener('click', instance.handleAnchorClick);
+    });
+  }
   
   // Remove scroll progress indicator
   if (instance.progressBar) {
