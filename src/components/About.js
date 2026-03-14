@@ -1,31 +1,51 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 
 const About = () => {
   const cardRef = useRef(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+  const [imageError, setImageError] = useState(false);
+
+  // Check if user prefers reduced motion (safely handle cases where matchMedia isn't available)
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia 
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches 
+    : false;
 
   const rotateX = useTransform(y, [-100, 100], [15, -15]);
   const rotateY = useTransform(x, [-100, 100], [-15, 15]);
 
   const handleMouseMove = (e) => {
-    if (!cardRef.current) return;
+    try {
+      if (!cardRef.current) return;
 
-    const rect = cardRef.current.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+      const rect = cardRef.current.getBoundingClientRect();
+      if (!rect || rect.width === 0 || rect.height === 0) return;
 
-    const xPercent = (mouseX / rect.width - 0.5) * 2;
-    const yPercent = (mouseY / rect.height - 0.5) * 2;
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
 
-    x.set(xPercent * 50);
-    y.set(yPercent * 50);
+      const xPercent = (mouseX / rect.width - 0.5) * 2;
+      const yPercent = (mouseY / rect.height - 0.5) * 2;
+
+      x.set(xPercent * 50);
+      y.set(yPercent * 50);
+    } catch (error) {
+      console.error('Error in handleMouseMove:', error);
+    }
   };
 
   const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
+    try {
+      x.set(0);
+      y.set(0);
+    } catch (error) {
+      console.error('Error in handleMouseLeave:', error);
+    }
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
   };
 
   return (
@@ -37,10 +57,10 @@ const About = () => {
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+          whileInView={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
+          transition={prefersReducedMotion ? {} : { duration: 0.6, ease: 'easeOut' }}
           className="text-center mb-16"
         >
           <h2 className="section-heading text-4xl md:text-5xl font-bold text-white">About Me</h2>
@@ -51,46 +71,62 @@ const About = () => {
           {/* Image Column */}
           <motion.div 
             ref={cardRef}
-            initial={{ opacity: 0, x: -100 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -100 }}
+            whileInView={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 1, x: 0 }}
             viewport={{ once: true }}
             className="relative group"
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{ perspective: 1000 }}
+            onMouseMove={prefersReducedMotion ? undefined : handleMouseMove}
+            onMouseLeave={prefersReducedMotion ? undefined : handleMouseLeave}
+            style={{ perspective: prefersReducedMotion ? 'none' : 1000 }}
           >
             <motion.div 
               className="aspect-square rounded-2xl overflow-hidden card-3d shadow-xl shadow-primary-500/20"
-              style={{ rotateX, rotateY }}
-              whileHover={{ scale: 1.03 }} // Add subtle scale on container hover
+              style={{ 
+                rotateX: prefersReducedMotion ? 0 : rotateX, 
+                rotateY: prefersReducedMotion ? 0 : rotateY
+              }}
+              whileHover={prefersReducedMotion ? {} : { scale: 1.03 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
-              <motion.img 
-                src="/image/varun.jpg" 
-                alt="Varun M" 
-                className="w-full h-full object-cover"
-                style={{ originX: 0.5, originY: 0.5 }} // Ensure scaling is centered
-                animate={{
-                  y: ["0%", "-2%", "0%"],
-                  transition: {
-                    duration: 4,
-                    ease: "easeInOut",
-                    repeat: Infinity,
-                  }
-                }}
-                whileHover={{ 
-                  scale: 1.1, // Image scales more
-                  transition: { duration: 0.5, ease: 'easeInOut' } 
-                }} 
-              />
+              {imageError ? (
+                // Fallback placeholder when image fails to load
+                <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                  <div className="text-center">
+                    <svg className="w-24 h-24 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-gray-400 text-sm">Image not available</p>
+                  </div>
+                </div>
+              ) : (
+                <motion.img 
+                  src="/image/varun.jpg" 
+                  alt="Varun M - Full Stack Developer" 
+                  className="w-full h-full object-cover"
+                  style={{ originX: 0.5, originY: 0.5 }} // Ensure scaling is centered
+                  onError={handleImageError}
+                  animate={prefersReducedMotion ? {} : {
+                    y: ["0%", "-2%", "0%"],
+                    transition: {
+                      duration: 4,
+                      ease: "easeInOut",
+                      repeat: Infinity,
+                    }
+                  }}
+                  whileHover={prefersReducedMotion ? {} : { 
+                    scale: 1.1,
+                    transition: { duration: 0.5, ease: 'easeInOut' } 
+                  }} 
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent pointer-events-none" /> 
             </motion.div>
           </motion.div>
 
           {/* Content Column */}
           <motion.div 
-            initial={{ opacity: 0, x: 100 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: 100 }}
+            whileInView={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 1, x: 0 }}
             viewport={{ once: true }}
             className="space-y-8"
           >
@@ -117,8 +153,8 @@ const About = () => {
                   variants={{ // Container variant for stagger
                     visible: { transition: { staggerChildren: 0.1 } }
                   }}
-                  initial="hidden"
-                  whileInView="visible" // Animate when in view
+                  initial={prefersReducedMotion ? "visible" : "hidden"}
+                  whileInView={prefersReducedMotion ? "visible" : "visible"}
                   viewport={{ once: true }}
                 >
                   {['React', 'Node.js', 'TypeScript', 'AWS', 'MongoDB'].map((tech, index) => (
@@ -126,10 +162,10 @@ const About = () => {
                       key={index} 
                       className="px-3 py-1 bg-gray-800/50 rounded-full text-sm border border-gray-700/50"
                       variants={{ // Item variant for stagger
-                        hidden: { opacity: 0, y: 10 },
+                        hidden: prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 },
                         visible: { opacity: 1, y: 0 }
                       }}
-                      whileHover={{ scale: 1.05, y: -2, backgroundColor: 'rgba(59, 130, 246, 0.2)' }} // Add hover effect
+                      whileHover={prefersReducedMotion ? {} : { scale: 1.05, y: -2, backgroundColor: 'rgba(59, 130, 246, 0.2)' }}
                     >
                       {tech}
                     </motion.span>

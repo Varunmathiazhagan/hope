@@ -6,7 +6,14 @@ import { easings } from '../utils/easings';
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState(() => {
+    // Load theme from localStorage or default to 'dark'
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme');
+      return savedTheme || 'dark';
+    }
+    return 'dark';
+  });
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState('home');
 
@@ -53,13 +60,21 @@ const Navbar = () => {
     };
   }, []);
 
+  // Persist theme changes to localStorage
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
   // Function to determine active section based on scroll position
   const updateActiveSection = (scrollPosition) => {
-    const sections = ['home', 'about', 'skills', 'projects', 'experience', 'contact'];
+    const sections = ['home', 'about', 'skills', 'projects', 'education', 'contact'];
     
-    for (const section of sections) {
-      const element = document.getElementById(section);
-      if (element) {
+    try {
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (!element) continue;
+        
         const rect = element.getBoundingClientRect();
         // Adjust the threshold based on section visibility
         const threshold = section === 'home' ? 0.5 : 0.3;
@@ -70,6 +85,9 @@ const Navbar = () => {
           break;
         }
       }
+    } catch (error) {
+      console.warn('Error updating active section:', error);
+      // Silently fail - keep current active section
     }
   };
 
@@ -91,7 +109,7 @@ const Navbar = () => {
     { name: 'About', to: 'about' },
     { name: 'Skills', to: 'skills' },
     { name: 'Projects', to: 'projects' },
-    { name: 'Experience', to: 'experience' },
+    { name: 'Education', to: 'education' },
     { name: 'Contact', to: 'contact' },
   ];
 

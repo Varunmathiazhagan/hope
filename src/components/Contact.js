@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiMapPin, FiMail, FiPhone, FiLinkedin, FiGithub, FiInstagram } from 'react-icons/fi';
 import { useForm, ValidationError } from '@formspree/react';
 
+// Better email validation
+const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 254;
+};
+
 const Contact = () => {
-  const [state, handleFormspreeSubmit] = useForm("mqadzvzd");
+  const formspreeKey = process.env.REACT_APP_FORMSPREE_ID || "mqadzvzd";
+  const [state, handleFormspreeSubmit] = useForm(formspreeKey);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -12,6 +19,19 @@ const Contact = () => {
     message: ''
   });
   const [errors, setErrors] = useState({});
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
+
+  // Clear success/error messages after 5 seconds
+  useEffect(() => {
+    if (submitSuccess || submitError) {
+      const timer = setTimeout(() => {
+        setSubmitSuccess(false);
+        setSubmitError(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [submitSuccess, submitError]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,18 +56,24 @@ const Contact = () => {
     if (!formData.name.trim()) {
       tempErrors.name = "Name is required";
       isValid = false;
+    } else if (formData.name.trim().length < 2) {
+      tempErrors.name = "Name must be at least 2 characters";
+      isValid = false;
     }
     
     if (!formData.email) {
       tempErrors.email = "Email is required";
       isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      tempErrors.email = "Email address is invalid";
+    } else if (!isValidEmail(formData.email)) {
+      tempErrors.email = "Please enter a valid email address";
       isValid = false;
     }
     
     if (!formData.subject.trim()) {
       tempErrors.subject = "Subject is required";
+      isValid = false;
+    } else if (formData.subject.trim().length < 3) {
+      tempErrors.subject = "Subject must be at least 3 characters";
       isValid = false;
     }
     
@@ -57,6 +83,9 @@ const Contact = () => {
     } else if (formData.message.trim().length < 10) {
       tempErrors.message = "Message must be at least 10 characters";
       isValid = false;
+    } else if (formData.message.trim().length > 5000) {
+      tempErrors.message = "Message cannot exceed 5000 characters";
+      isValid = false;
     }
     
     setErrors(tempErrors);
@@ -65,22 +94,41 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError(false);
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      setSubmitError(true);
+      return;
+    }
     
-    // Submit to Formspree
-    await handleFormspreeSubmit(e);
-    
-    // Clear form on successful submission
-    if (state.succeeded) {
+    try {
+      // Submit to Formspree
+      await handleFormspreeSubmit(e);
+      
+      // Set success state
+      setSubmitSuccess(true);
+      
+      // Clear form on successful submission
       setFormData({
         name: '',
         email: '',
         subject: '',
         message: ''
       });
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setSubmitError(true);
     }
   };
+
+  // Monitor form state changes
+  useEffect(() => {
+    if (state.succeeded) {
+      setSubmitSuccess(true);
+    } else if (state.errors?.length > 0) {
+      setSubmitError(true);
+    }
+  }, [state]);
 
   const contactInfo = [
     {
@@ -153,29 +201,31 @@ const Contact = () => {
                 <FiMail className="mr-2" /> Send a Message
               </h3>
               
-              {state.succeeded && (
+              {submitSuccess && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-green-500/20 border border-green-500 text-green-500 px-4 py-3 rounded-lg mb-6 flex items-center"
+                  role="alert"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  Thank you for your message! I'll get back to you soon.
+                  <span>Thank you for your message! I'll get back to you soon.</span>
                 </motion.div>
               )}
               
-              {state.errors && state.errors.length > 0 && (
+              {submitError && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-red-500/20 border border-red-500 text-red-500 px-4 py-3 rounded-lg mb-6 flex items-center"
+                  role="alert"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
-                  Something went wrong. Please try again later.
+                  <span>Please check your form and try again.</span>
                 </motion.div>
               )}
               

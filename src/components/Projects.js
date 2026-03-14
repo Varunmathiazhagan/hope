@@ -468,13 +468,18 @@ const Projects = () => {
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         >
           {/* Project Image */}
-          <div className="relative h-48 overflow-hidden">
+          <div className="relative h-48 overflow-hidden bg-gray-700">
             <motion.img 
               src={project.image} 
               alt={project.title}
               className="w-full h-full object-cover"
               whileHover={{ scale: 1.1 }}
               transition={{ duration: 0.4 }}
+              onError={(e) => {
+                e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 300%22%3E%3Crect fill=%22%23374151%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22system-ui%22 font-size=%2216%22 fill=%22%2399a3a9%22%3E Image not available %3C/text%3E%3C/svg%3E';
+                e.target.alt = 'Image not available';
+              }}
+              loading="lazy"
             />
             
             {/* Status Badge */}
@@ -509,6 +514,7 @@ const Projects = () => {
                     href={project.github}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label="View GitHub repository"
                     className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
@@ -519,6 +525,7 @@ const Projects = () => {
                     href={project.demo}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label="View live demo"
                     className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
@@ -527,6 +534,7 @@ const Projects = () => {
                   </motion.a>
                   <motion.button
                     onClick={() => handleProjectDetails(project)}
+                    aria-label="View project details"
                     className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}

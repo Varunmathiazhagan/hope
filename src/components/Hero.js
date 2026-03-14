@@ -14,6 +14,18 @@ const Hero = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const cursorRef = useRef(null);
 
+  // Throttle mouse move to improve performance
+  const throttleMouseMove = (func, limit) => {
+    let inThrottle;
+    return function(e) {
+      if (!inThrottle) {
+        func(e);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  };
+
   // Track mouse for text movement and custom cursor
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -29,10 +41,11 @@ const Hero = () => {
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    const throttledMouseMove = throttleMouseMove(handleMouseMove, 16); // ~60fps
+    window.addEventListener('mousemove', throttledMouseMove);
     
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousemove', throttledMouseMove);
     };
   }, []);
   

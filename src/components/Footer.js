@@ -80,8 +80,8 @@ const Footer = () => {
               Projects
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-400 transition-all group-hover:w-full"></span>
             </a>
-            <a href="#experience" className="text-gray-400 hover:text-primary-400 transition-colors py-2 relative group">
-              Experience
+            <a href="#education" className="text-gray-400 hover:text-primary-400 transition-colors py-2 relative group">
+              Education
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-400 transition-all group-hover:w-full"></span>
             </a>
             <a href="#contact" className="text-gray-400 hover:text-primary-400 transition-colors py-2 relative group">
@@ -104,11 +104,13 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={link.label}
+                title={link.label}
                 className={`p-3 bg-gray-800 rounded-full text-gray-300 hover:text-white ${link.color} transition-all duration-300`}
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 whileTap={{ scale: 0.95 }}
               >
                 {link.icon}
+                <span className="sr-only">{link.label}</span>
               </motion.a>
             ))}
           </motion.div>

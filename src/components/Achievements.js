@@ -57,42 +57,47 @@ const Achievements = () => {
     threshold: 0.1,
   });
 
+  // Check if user prefers reduced motion (safely handle cases where matchMedia isn't available)
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia 
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches 
+    : false;
+
   return (
     <section id="achievements" className="py-20 bg-gradient-to-br from-gray-900 to-gray-800/30 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div 
           className="absolute top-40 left-10 w-64 h-64 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-full blur-3xl"
-          animate={{ 
+          animate={prefersReducedMotion ? {} : { 
             x: [0, 50, 0],
             y: [0, -30, 0],
             scale: [1, 1.1, 1]
           }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          transition={prefersReducedMotion ? {} : { duration: 15, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div 
           className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-full blur-3xl"
-          animate={{ 
+          animate={prefersReducedMotion ? {} : { 
             x: [0, -70, 0],
             y: [0, 50, 0],
             scale: [1, 1.2, 1]
           }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          transition={prefersReducedMotion ? {} : { duration: 20, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Section Header */}
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+          whileInView={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={prefersReducedMotion ? {} : { duration: 0.6 }}
           className="text-center mb-16"
         >
           <motion.div 
             className="inline-flex items-center space-x-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20"
-            whileHover={{ scale: 1.05 }}
+            whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
           >
             <FiAward className="text-yellow-400 text-xl" />
             <span className="text-white font-medium">Recognition & Honors</span>
@@ -116,9 +121,9 @@ const Achievements = () => {
           {achievementsData.map((achievement, index) => (
             <motion.div
               key={achievement.id}
-              initial={{ opacity: 0, y: 50 }}
-              animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+              animate={inView ? { opacity: 1, y: 0 } : (prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 })}
+              transition={prefersReducedMotion ? {} : { duration: 0.5, delay: index * 0.1 }}
               className="group relative h-full"
             >
               <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500/50 to-orange-500/30 rounded-xl blur opacity-0 group-hover:opacity-70 transition duration-300"></div>
@@ -158,10 +163,10 @@ const Achievements = () => {
 
         {/* CTA Section */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          whileInView={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
+          transition={prefersReducedMotion ? {} : { delay: 0.5 }}
           className="text-center mt-16"
         >
           <p className="text-gray-300 mb-6">Interested in my qualifications and achievements?</p>

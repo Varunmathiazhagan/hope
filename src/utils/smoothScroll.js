@@ -115,7 +115,8 @@ export const setupIntersectionObserver = () => {
  * @param {number} duration - Animation duration in milliseconds
  */
 export const scrollToElement = (selector, offset = 0, duration = 800) => {
-  const target = document.querySelector(selector);
+  const normalizedSelector = selector === '#experience' ? '#education' : selector;
+  const target = document.querySelector(normalizedSelector);
   if (!target) return;
   
   const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;

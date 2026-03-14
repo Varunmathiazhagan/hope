@@ -22,6 +22,11 @@ const Skills = () => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
+  // Check if user prefers reduced motion (safely handle cases where matchMedia isn't available)
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia 
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches 
+    : false;
+
   // Enhanced skill data with ratings and descriptions
   const skillCategories = useMemo(() => [
     {
@@ -413,36 +418,34 @@ const Skills = () => {
       <div className="absolute inset-0 pointer-events-none">
         <motion.div 
           className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"
-          // Simplify animation to improve performance
-          animate={{ 
+          animate={prefersReducedMotion ? {} : { 
             x: [0, 50, 0],
             y: [0, -30, 0],
           }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          transition={prefersReducedMotion ? {} : { duration: 30, repeat: Infinity, ease: "linear" }}
         />
         <motion.div 
           className="absolute bottom-10 right-10 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"
-          // Simplify animation to improve performance
-          animate={{ 
+          animate={prefersReducedMotion ? {} : { 
             x: [0, -50, 0],
             y: [0, 30, 0],
           }}
-          transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
+          transition={prefersReducedMotion ? {} : { duration: 35, repeat: Infinity, ease: "linear" }}
         />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Enhanced Header */}
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+          whileInView={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={prefersReducedMotion ? {} : { duration: 0.6 }}
           className="text-center mb-16"
         >
           <motion.div 
             className="inline-flex items-center space-x-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20"
-            whileHover={{ scale: 1.05 }}
+            whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
           >
             <FaCode className="text-cyan-400 text-xl" />
             <span className="text-white font-medium">Technical Expertise</span>
@@ -473,6 +476,8 @@ const Skills = () => {
               <motion.button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
+                aria-pressed={selectedCategory === category}
+                aria-label={`Filter skills by ${category}`}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                   selectedCategory === category
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg'
@@ -505,6 +510,7 @@ const Skills = () => {
                     placeholder="Search skills..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label="Search skills by name"
                     className="px-4 py-2 bg-gray-800/50 border border-gray-700/50 rounded-full text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400"
                   />
                 )}
@@ -514,6 +520,8 @@ const Skills = () => {
                   setIsSearchOpen(!isSearchOpen);
                   if (isSearchOpen) setSearchQuery('');
                 }}
+                aria-label={isSearchOpen ? "Clear search" : "Search skills"}
+                aria-expanded={isSearchOpen}
                 className="p-3 bg-gray-800/50 border border-gray-700/50 rounded-full text-gray-300 hover:text-cyan-400 transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -539,15 +547,15 @@ const Skills = () => {
                 <motion.div key={category.name} variants={itemVariants}>
                   <motion.div 
                     className="text-center mb-8"
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
                   >
                     <div className="flex items-center justify-center space-x-3 mb-3">
                       <motion.span 
                         style={{ color: '#60A5FA' }}
-                        animate={{
+                        animate={prefersReducedMotion ? {} : {
                           rotate: [0, 360],
                         }}
-                        transition={{
+                        transition={prefersReducedMotion ? {} : {
                           duration: 20,
                           repeat: Infinity,
                           ease: "linear"
@@ -566,17 +574,19 @@ const Skills = () => {
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"
                     variants={containerVariants}
                     initial="visible" // Change from initial={false} to ensure visibility
+                    role="list"
+                    aria-label={`${category.name} skills`}
                   >
                     {/* Add key with both category and skill name to ensure uniqueness */}
                     {category.skills.map((skill, index) => (
-                      <React.Fragment key={`${category.name}-${skill.name}`}>
+                      <div key={`${category.name}-${skill.name}`} role="listitem">
                         <SkillCard 
                           skill={skill} 
                           category={category} 
                           index={index} 
                           total={category.skills.length}
                         />
-                      </React.Fragment>
+                      </div>
                     ))}
                   </motion.div>
                 </motion.div>
@@ -594,6 +604,7 @@ const Skills = () => {
                     setSelectedCategory('All');
                     setSearchQuery('');
                   }}
+                  aria-label="Reset all skill filters"
                   className="mt-4 px-6 py-2 bg-cyan-500 text-white rounded-full hover:bg-cyan-600 transition-colors"
                 >
                   Reset Filters
@@ -605,10 +616,10 @@ const Skills = () => {
 
         {/* Areas of Interest Section */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          whileInView={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
+          transition={prefersReducedMotion ? {} : { delay: 0.5 }}
           className="mt-24 text-center"
         >
           <h3 className="text-3xl font-bold text-white mb-8">
@@ -621,23 +632,23 @@ const Skills = () => {
             {interests.map((interest, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                initial={prefersReducedMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+                whileInView={prefersReducedMotion ? { opacity: 1, scale: 1 } : { opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.05, y: -5 }}
+                transition={prefersReducedMotion ? {} : { delay: index * 0.1 }}
+                whileHover={prefersReducedMotion ? {} : { scale: 1.05, y: -5 }}
                 className="bg-gray-800/50 backdrop-blur-lg p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700/50 relative overflow-hidden"
               >
                 <motion.div
-                  animate={{
+                  animate={prefersReducedMotion ? {} : {
                     scale: [1, 1.1, 1],
                     opacity: [0.1, 0.2, 0.1],
                   }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: index }}
+                  transition={prefersReducedMotion ? {} : { duration: 4, repeat: Infinity, ease: "easeInOut", delay: index }}
                   className={`absolute inset-0 bg-gradient-to-br ${interest.color} opacity-20 rounded-2xl`}
                 />
                 <motion.div 
-                  whileHover={{ scale: 1.2, rotate: 10 }} 
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.2, rotate: 10 }} 
                   className="text-4xl mb-4 relative z-10"
                   style={{ color: "white" }}
                 >

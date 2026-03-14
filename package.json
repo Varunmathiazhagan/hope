@@ -31,7 +31,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
-    "test": "jest --detectOpenHandles"
+    "test": "react-scripts test --watchAll=false",
+    "test:watch": "react-scripts test"
   },
   "eslintConfig": {
     "extends": [
@@ -53,7 +54,11 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-react": "^7.28.5",
     "autoprefixer": "^10.4.20",
+    "babel-jest": "^30.3.0",
+    "identity-obj-proxy": "^3.0.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14"
   }
