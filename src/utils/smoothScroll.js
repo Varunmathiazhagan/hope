@@ -2,10 +2,6 @@
  * Enhanced Smooth Scrolling Utility with simplified approach to prevent glitches
  */
 
-import { easings } from './easings';
-
-let activeScrollAnimationFrame = null;
-
 /**
  * Initialize enhanced smooth scrolling
  * @returns {Object} Scroll instance that can be destroyed later
@@ -125,38 +121,17 @@ export const scrollToElement = (selector, offset = 0, duration = 800) => {
   const normalizedSelector = selector === '#experience' ? '#education' : selector;
   const target = document.querySelector(normalizedSelector);
   if (!target) return;
-  
-  const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
-  const startPosition = window.pageYOffset;
-  const distance = targetPosition - startPosition;
 
-  if (activeScrollAnimationFrame) {
-    cancelAnimationFrame(activeScrollAnimationFrame);
-    activeScrollAnimationFrame = null;
-  }
+  const shouldReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const behavior = shouldReduceMotion || duration <= 0 ? 'auto' : 'smooth';
+  const top = normalizedSelector === '#home'
+    ? 0
+    : Math.max(0, target.getBoundingClientRect().top + window.pageYOffset - offset);
 
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || duration <= 0) {
-    window.scrollTo(0, targetPosition);
-    return;
-  }
-  
-  let startTime = null;
-  
-  function animation(currentTime) {
-    if (startTime === null) startTime = currentTime;
-    const timeElapsed = currentTime - startTime;
-    const scrollY = easings.easeOutQuart(timeElapsed, startPosition, distance, duration);
-    
-    window.scrollTo(0, scrollY);
-    
-    if (timeElapsed < duration) {
-      activeScrollAnimationFrame = requestAnimationFrame(animation);
-    } else {
-      activeScrollAnimationFrame = null;
-    }
-  }
-  
-  activeScrollAnimationFrame = requestAnimationFrame(animation);
+  window.scrollTo({
+    top,
+    behavior
+  });
 };
 
 /**
@@ -165,11 +140,6 @@ export const scrollToElement = (selector, offset = 0, duration = 800) => {
  */
 export const destroySmoothScroll = (instance) => {
   if (!instance) return;
-
-  if (activeScrollAnimationFrame) {
-    cancelAnimationFrame(activeScrollAnimationFrame);
-    activeScrollAnimationFrame = null;
-  }
   
   if (instance.observer && instance.observer.disconnect) {
     instance.observer.disconnect();

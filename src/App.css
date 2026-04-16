@@ -90,6 +90,8 @@ section {
   contain: content;
   /* Optional: Add paint containment for better performance */
   contain: paint;
+  /* Keep headings visible below fixed navbar when scrolled via nav links */
+  scroll-margin-top: 90px;
 }
 
 /* Disable scroll snap which can cause jumpy scrolling */
