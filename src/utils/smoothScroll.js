@@ -11,13 +11,16 @@ import { easings } from './easings';
 export const initSmoothScroll = () => {
   // Don't use intensive scroll behavior on mobile - just set up indicators
   if (window.innerWidth < 768) {
-    setupScrollProgressIndicator();
+    const { progressBar, updateScrollProgress } = setupScrollProgressIndicator();
     setupIntersectionObserver();
-    return null;
+    return {
+      progressBar,
+      updateScrollProgress
+    };
   }
   
   // Setup scroll progress indicator
-  const progressBar = setupScrollProgressIndicator();
+  const { progressBar, updateScrollProgress } = setupScrollProgressIndicator();
   
   // Setup element reveal animations
   const observer = setupIntersectionObserver();
@@ -38,6 +41,7 @@ export const initSmoothScroll = () => {
   return {
     observer,
     progressBar,
+    updateScrollProgress,
     handleAnchorClick
   };
 };
@@ -63,16 +67,18 @@ export const setupScrollProgressIndicator = () => {
     const updateScrollProgress = () => {
       const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
       const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      const scrollPercentage = Math.max(0, Math.min(100, (scrollTop / height) * 100));
+      const scrollPercentage = height > 0
+        ? Math.max(0, Math.min(100, (scrollTop / height) * 100))
+        : 0;
       progressBar.style.width = `${scrollPercentage}%`;
     };
     
     window.addEventListener('scroll', updateScrollProgress, { passive: true });
     updateScrollProgress(); // Initial call
     
-    return progressBar;
+    return { progressBar, updateScrollProgress };
   }
-  return null;
+  return { progressBar: null, updateScrollProgress: null };
 };
 
 /**
@@ -156,7 +162,7 @@ export const destroySmoothScroll = (instance) => {
   });
   
   // Remove scroll progress indicator
-  if (instance.progressBar) {
+  if (instance.updateScrollProgress) {
     window.removeEventListener('scroll', instance.updateScrollProgress);
   }
 };
