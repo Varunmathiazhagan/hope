@@ -4,6 +4,8 @@
 
 import { easings } from './easings';
 
+let activeScrollAnimationFrame = null;
+
 /**
  * Initialize enhanced smooth scrolling
  * @returns {Object} Scroll instance that can be destroyed later
@@ -17,7 +19,7 @@ export const initSmoothScroll = () => {
   }
   
   // Setup scroll progress indicator
-  const progressBar = setupScrollProgressIndicator();
+  const progressIndicator = setupScrollProgressIndicator();
   
   // Setup element reveal animations
   const observer = setupIntersectionObserver();
@@ -37,7 +39,7 @@ export const initSmoothScroll = () => {
   // Return methods for cleanup
   return {
     observer,
-    progressBar,
+    progressIndicator,
     handleAnchorClick
   };
 };
@@ -63,6 +65,11 @@ export const setupScrollProgressIndicator = () => {
     const updateScrollProgress = () => {
       const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
       const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      if (height <= 0) {
+        progressBar.style.width = '0%';
+        return;
+      }
+
       const scrollPercentage = Math.max(0, Math.min(100, (scrollTop / height) * 100));
       progressBar.style.width = `${scrollPercentage}%`;
     };
@@ -70,7 +77,7 @@ export const setupScrollProgressIndicator = () => {
     window.addEventListener('scroll', updateScrollProgress, { passive: true });
     updateScrollProgress(); // Initial call
     
-    return progressBar;
+    return { progressBar, updateScrollProgress };
   }
   return null;
 };
@@ -122,6 +129,16 @@ export const scrollToElement = (selector, offset = 0, duration = 800) => {
   const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
   const startPosition = window.pageYOffset;
   const distance = targetPosition - startPosition;
+
+  if (activeScrollAnimationFrame) {
+    cancelAnimationFrame(activeScrollAnimationFrame);
+    activeScrollAnimationFrame = null;
+  }
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || duration <= 0) {
+    window.scrollTo(0, targetPosition);
+    return;
+  }
   
   let startTime = null;
   
@@ -133,11 +150,13 @@ export const scrollToElement = (selector, offset = 0, duration = 800) => {
     window.scrollTo(0, scrollY);
     
     if (timeElapsed < duration) {
-      requestAnimationFrame(animation);
+      activeScrollAnimationFrame = requestAnimationFrame(animation);
+    } else {
+      activeScrollAnimationFrame = null;
     }
   }
   
-  requestAnimationFrame(animation);
+  activeScrollAnimationFrame = requestAnimationFrame(animation);
 };
 
 /**
@@ -146,6 +165,11 @@ export const scrollToElement = (selector, offset = 0, duration = 800) => {
  */
 export const destroySmoothScroll = (instance) => {
   if (!instance) return;
+
+  if (activeScrollAnimationFrame) {
+    cancelAnimationFrame(activeScrollAnimationFrame);
+    activeScrollAnimationFrame = null;
+  }
   
   if (instance.observer && instance.observer.disconnect) {
     instance.observer.disconnect();
@@ -156,7 +180,7 @@ export const destroySmoothScroll = (instance) => {
   });
   
   // Remove scroll progress indicator
-  if (instance.progressBar) {
-    window.removeEventListener('scroll', instance.updateScrollProgress);
+  if (instance.progressIndicator) {
+    window.removeEventListener('scroll', instance.progressIndicator.updateScrollProgress);
   }
 };

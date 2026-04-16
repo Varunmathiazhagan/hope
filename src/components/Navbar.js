@@ -31,7 +31,7 @@ const Navbar = () => {
       
       // Calculate scroll progress for the indicator with smoother updates
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = (currentPosition / totalHeight) * 100;
+      const progress = totalHeight > 0 ? (currentPosition / totalHeight) * 100 : 0;
       setScrollProgress(progress);
       
       // Track active section
