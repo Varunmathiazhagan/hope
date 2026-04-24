@@ -313,13 +313,13 @@ const Hero = () => {
           }
         };
         
-        containerElement.addEventListener('mousemove', updateCursor);
-        containerElement.addEventListener('touchmove', (e) => {
-          e.preventDefault();
-          updateCursor(e.touches[0]);
-        }, { passive: false });
-        
-        containerElement.addEventListener('click', (e) => {
+        const handleTouchMove = (e) => {
+          if (e.touches && e.touches.length > 0) {
+            updateCursor(e.touches[0]);
+          }
+        };
+
+        const handleContainerClick = (e) => {
           updateCursor(e);
           cursor.strength = 1.5; // Increased click effect strength
           
@@ -334,14 +334,19 @@ const Hero = () => {
             const dz = positions[i3 + 2] - cursor.worldZ;
             const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
             
-            if (dist < 100) {
+            if (dist > 0 && dist < 100) {
               const force = 10 * (1 - dist / 100);
               velocitiesArray[i3] += (dx / dist) * force;
               velocitiesArray[i3 + 1] += (dy / dist) * force;
               velocitiesArray[i3 + 2] += (dz / dist) * force;
             }
           }
-        });
+        };
+
+        containerElement.addEventListener('mousemove', updateCursor);
+        // Keep this passive so touch gestures can still scroll the page.
+        containerElement.addEventListener('touchmove', handleTouchMove, { passive: true });
+        containerElement.addEventListener('click', handleContainerClick);
         
         const animationSettings = {
           attractionRadius: 100, // Increased radius
@@ -387,7 +392,7 @@ const Hero = () => {
               const dz = positions[i3 + 2] - cursor.worldZ;
               const distToCursor = Math.sqrt(dx * dx + dy * dy + dz * dz);
               
-              if (distToCursor < animationSettings.attractionRadius) {
+              if (distToCursor > 0 && distToCursor < animationSettings.attractionRadius) {
                 const force = Math.pow((animationSettings.attractionRadius - distToCursor) / animationSettings.attractionRadius, 2);
                 const strength = animationSettings.baseStrength * force * cursor.strength;
                 
@@ -406,7 +411,7 @@ const Hero = () => {
                 const tdz = positions[i3 + 2] - trailPos.z;
                 const trailDist = Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz);
                 
-                if (trailDist < animationSettings.attractionRadius * 0.7) {
+                if (trailDist > 0 && trailDist < animationSettings.attractionRadius * 0.7) {
                   const trailForce = Math.pow((animationSettings.attractionRadius * 0.7 - trailDist) / (animationSettings.attractionRadius * 0.7), 2);
                   const trailStrength = animationSettings.baseStrength * trailForce * cursor.strength * trailFactor * animationSettings.trailEffect;
                   
@@ -456,7 +461,8 @@ const Hero = () => {
         cleanup = () => {
           window.removeEventListener('resize', handleResize);
           containerElement.removeEventListener('mousemove', updateCursor);
-          containerElement.removeEventListener('touchmove', updateCursor);
+          containerElement.removeEventListener('touchmove', handleTouchMove);
+          containerElement.removeEventListener('click', handleContainerClick);
           
           if (animationIdRef.current) {
             cancelAnimationFrame(animationIdRef.current);

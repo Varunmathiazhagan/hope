@@ -2,8 +2,6 @@
  * Enhanced Smooth Scrolling Utility with simplified approach to prevent glitches
  */
 
-import { easings } from './easings';
-
 /**
  * Initialize enhanced smooth scrolling
  * @returns {Object} Scroll instance that can be destroyed later
@@ -17,7 +15,7 @@ export const initSmoothScroll = () => {
   }
   
   // Setup scroll progress indicator
-  const progressBar = setupScrollProgressIndicator();
+  const progressIndicator = setupScrollProgressIndicator();
   
   // Setup element reveal animations
   const observer = setupIntersectionObserver();
@@ -37,7 +35,7 @@ export const initSmoothScroll = () => {
   // Return methods for cleanup
   return {
     observer,
-    progressBar,
+    progressIndicator,
     handleAnchorClick
   };
 };
@@ -63,6 +61,11 @@ export const setupScrollProgressIndicator = () => {
     const updateScrollProgress = () => {
       const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
       const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      if (height <= 0) {
+        progressBar.style.width = '0%';
+        return;
+      }
+
       const scrollPercentage = Math.max(0, Math.min(100, (scrollTop / height) * 100));
       progressBar.style.width = `${scrollPercentage}%`;
     };
@@ -70,7 +73,7 @@ export const setupScrollProgressIndicator = () => {
     window.addEventListener('scroll', updateScrollProgress, { passive: true });
     updateScrollProgress(); // Initial call
     
-    return progressBar;
+    return { progressBar, updateScrollProgress };
   }
   return null;
 };
@@ -118,26 +121,17 @@ export const scrollToElement = (selector, offset = 0, duration = 800) => {
   const normalizedSelector = selector === '#experience' ? '#education' : selector;
   const target = document.querySelector(normalizedSelector);
   if (!target) return;
-  
-  const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
-  const startPosition = window.pageYOffset;
-  const distance = targetPosition - startPosition;
-  
-  let startTime = null;
-  
-  function animation(currentTime) {
-    if (startTime === null) startTime = currentTime;
-    const timeElapsed = currentTime - startTime;
-    const scrollY = easings.easeOutQuart(timeElapsed, startPosition, distance, duration);
-    
-    window.scrollTo(0, scrollY);
-    
-    if (timeElapsed < duration) {
-      requestAnimationFrame(animation);
-    }
-  }
-  
-  requestAnimationFrame(animation);
+
+  const shouldReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const behavior = shouldReduceMotion || duration <= 0 ? 'auto' : 'smooth';
+  const top = normalizedSelector === '#home'
+    ? 0
+    : Math.max(0, target.getBoundingClientRect().top + window.pageYOffset - offset);
+
+  window.scrollTo({
+    top,
+    behavior
+  });
 };
 
 /**
@@ -156,7 +150,7 @@ export const destroySmoothScroll = (instance) => {
   });
   
   // Remove scroll progress indicator
-  if (instance.progressBar) {
-    window.removeEventListener('scroll', instance.updateScrollProgress);
+  if (instance.progressIndicator) {
+    window.removeEventListener('scroll', instance.progressIndicator.updateScrollProgress);
   }
 };
