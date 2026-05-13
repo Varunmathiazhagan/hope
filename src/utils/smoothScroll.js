@@ -4,41 +4,47 @@
 
 import { easings } from './easings';
 
+let activeScrollAnimationFrame = null;
+
 /**
  * Initialize enhanced smooth scrolling
  * @returns {Object} Scroll instance that can be destroyed later
  */
 export const initSmoothScroll = () => {
-  // Don't use intensive scroll behavior on mobile - just set up indicators
-  if (window.innerWidth < 768) {
-    setupScrollProgressIndicator();
-    setupIntersectionObserver();
-    return null;
-  }
-  
   // Setup scroll progress indicator
-  const progressBar = setupScrollProgressIndicator();
+  const progressIndicator = setupScrollProgressIndicator();
   
   // Setup element reveal animations
   const observer = setupIntersectionObserver();
+
+  // Only use custom JS anchor animation on larger screens.
+  const shouldUseCustomAnchorScroll = window.innerWidth >= 768;
+  const anchorElements = shouldUseCustomAnchorScroll
+    ? Array.from(document.querySelectorAll('a[href^="#"]'))
+    : [];
   
   // Handle hash links on page load
   if (window.location.hash) {
-    setTimeout(() => {
-      scrollToElement(window.location.hash, 100, 800);
-    }, 500);
+    const targetElement = document.querySelector(window.location.hash);
+    if (targetElement) {
+      window.requestAnimationFrame(() => {
+        scrollToElement(window.location.hash, 100, 800);
+      });
+    }
   }
   
-  // Add event listeners for smooth scrolling to anchors
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', handleAnchorClick);
-  });
+  if (shouldUseCustomAnchorScroll) {
+    anchorElements.forEach(anchor => {
+      anchor.addEventListener('click', handleAnchorClick);
+    });
+  }
   
   // Return methods for cleanup
   return {
     observer,
-    progressBar,
-    handleAnchorClick
+    disposeProgress: progressIndicator ? progressIndicator.dispose : null,
+    anchorElements,
+    shouldUseCustomAnchorScroll
   };
 };
 
@@ -48,6 +54,12 @@ export const initSmoothScroll = () => {
 const handleAnchorClick = (e) => {
   const href = e.currentTarget.getAttribute('href');
   if (href && href.startsWith('#') && href.length > 1) {
+    const targetElement = document.querySelector(href);
+    if (!targetElement) {
+      console.warn(`Scrolling target not found: ${href}`);
+      return;
+    }
+
     e.preventDefault();
     scrollToElement(href, 80, 800);
   }
@@ -59,20 +71,31 @@ const handleAnchorClick = (e) => {
  */
 export const setupScrollProgressIndicator = () => {
   const progressBar = document.querySelector('.scroll-progress-bar');
-  if (progressBar) {
-    const updateScrollProgress = () => {
-      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      const scrollPercentage = Math.max(0, Math.min(100, (scrollTop / height) * 100));
-      progressBar.style.width = `${scrollPercentage}%`;
-    };
-    
-    window.addEventListener('scroll', updateScrollProgress, { passive: true });
-    updateScrollProgress(); // Initial call
-    
-    return progressBar;
+  if (!progressBar) {
+    return null;
   }
-  return null;
+
+  const updateScrollProgress = () => {
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const scrollPercentage = height > 0
+      ? Math.max(0, Math.min(100, (scrollTop / height) * 100))
+      : 0;
+
+    progressBar.style.width = `${scrollPercentage}%`;
+  };
+
+  window.addEventListener('scroll', updateScrollProgress, { passive: true });
+  window.addEventListener('resize', updateScrollProgress, { passive: true });
+  updateScrollProgress();
+
+  return {
+    progressBar,
+    dispose: () => {
+      window.removeEventListener('scroll', updateScrollProgress);
+      window.removeEventListener('resize', updateScrollProgress);
+    }
+  };
 };
 
 /**
@@ -115,13 +138,30 @@ export const setupIntersectionObserver = () => {
  * @param {number} duration - Animation duration in milliseconds
  */
 export const scrollToElement = (selector, offset = 0, duration = 800) => {
-  const normalizedSelector = selector === '#experience' ? '#education' : selector;
-  const target = document.querySelector(normalizedSelector);
-  if (!target) return;
+  const target = document.querySelector(selector);
+  if (!target) {
+    console.warn(`Scroll target not found: ${selector}`);
+    return false;
+  }
   
-  const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
+  const maxScrollTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  const rawTargetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
+  const targetPosition = Math.max(0, Math.min(rawTargetPosition, maxScrollTop));
   const startPosition = window.pageYOffset;
   const distance = targetPosition - startPosition;
+
+  // If no distance to travel, just return
+  if (distance === 0) return true;
+
+  if (duration <= 0 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    window.scrollTo({ top: targetPosition, behavior: 'auto' });
+    return true;
+  }
+
+  if (activeScrollAnimationFrame !== null) {
+    window.cancelAnimationFrame(activeScrollAnimationFrame);
+    activeScrollAnimationFrame = null;
+  }
   
   let startTime = null;
   
@@ -129,15 +169,20 @@ export const scrollToElement = (selector, offset = 0, duration = 800) => {
     if (startTime === null) startTime = currentTime;
     const timeElapsed = currentTime - startTime;
     const scrollY = easings.easeOutQuart(timeElapsed, startPosition, distance, duration);
+    const boundedScrollY = Math.max(0, Math.min(scrollY, maxScrollTop));
     
-    window.scrollTo(0, scrollY);
+    window.scrollTo(0, boundedScrollY);
     
     if (timeElapsed < duration) {
-      requestAnimationFrame(animation);
+      activeScrollAnimationFrame = requestAnimationFrame(animation);
+    } else {
+      window.scrollTo(0, targetPosition);
+      activeScrollAnimationFrame = null;
     }
   }
   
-  requestAnimationFrame(animation);
+  activeScrollAnimationFrame = requestAnimationFrame(animation);
+  return true;
 };
 
 /**
@@ -145,18 +190,26 @@ export const scrollToElement = (selector, offset = 0, duration = 800) => {
  * @param {Object} instance - The instance returned from initSmoothScroll
  */
 export const destroySmoothScroll = (instance) => {
+  if (activeScrollAnimationFrame !== null) {
+    window.cancelAnimationFrame(activeScrollAnimationFrame);
+    activeScrollAnimationFrame = null;
+  }
+
   if (!instance) return;
   
   if (instance.observer && instance.observer.disconnect) {
     instance.observer.disconnect();
   }
-  
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.removeEventListener('click', instance.handleAnchorClick);
-  });
-  
-  // Remove scroll progress indicator
-  if (instance.progressBar) {
-    window.removeEventListener('scroll', instance.updateScrollProgress);
+
+  // Clean up anchor click listeners only if they were added
+  if (instance.shouldUseCustomAnchorScroll && instance.anchorElements) {
+    instance.anchorElements.forEach(anchor => {
+      // Use the same event listener type as it was added
+      anchor.removeEventListener('click', handleAnchorClick);
+    });
+  }
+
+  if (typeof instance.disposeProgress === 'function') {
+    instance.disposeProgress();
   }
 };

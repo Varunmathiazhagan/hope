@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FiGithub, FiLinkedin, FiInstagram, FiArrowUp, FiHeart } from 'react-icons/fi';
+import { scrollToElement } from '../utils/smoothScroll';
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -12,10 +13,7 @@ const Footer = () => {
   ];
 
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    scrollToElement('html', 0, 800);
   };
 
   return (

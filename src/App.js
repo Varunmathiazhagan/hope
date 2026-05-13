@@ -16,9 +16,6 @@ function App() {
 
   // Enhanced scroll behavior with proper cleanup
   useEffect(() => {
-    // Add classes to optimize scrolling
-    document.documentElement.style.scrollBehavior = 'smooth';
-    
     // Initialize smooth scrolling without intrusive effects
     const smoothScrollInstance = initSmoothScroll();
     
@@ -48,9 +45,9 @@ function App() {
 
     // Cleanup function
     return () => {
-      destroySmoothScroll(smoothScrollInstance);
-      // Remove inline styles
-      document.documentElement.style.scrollBehavior = '';
+      if (smoothScrollInstance) {
+        destroySmoothScroll(smoothScrollInstance);
+      }
     };
   }, []);
 

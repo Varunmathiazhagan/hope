@@ -31,32 +31,39 @@ const Navbar = () => {
       
       // Calculate scroll progress for the indicator with smoother updates
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = (currentPosition / totalHeight) * 100;
+      const progress = totalHeight > 0
+        ? Math.max(0, Math.min(100, (currentPosition / totalHeight) * 100))
+        : 0;
       setScrollProgress(progress);
       
       // Track active section
       updateActiveSection(currentPosition);
     };
 
-    // Throttled scroll handler for better performance
-    let lastScrollTime = 0;
-    const scrollThrottleTime = 10; // ms
+    // Use requestAnimationFrame to batch scroll updates with browser paint.
+    let isTicking = false;
 
     const throttledScrollHandler = () => {
-      const now = Date.now();
-      if (now - lastScrollTime >= scrollThrottleTime) {
-        lastScrollTime = now;
-        handleScroll();
+      if (!isTicking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          updateActiveSection(window.scrollY);
+          isTicking = false;
+        });
+        isTicking = true;
       }
     };
 
     window.addEventListener('scroll', throttledScrollHandler, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
     
     // Initial check
     handleScroll();
+    updateActiveSection(window.scrollY);
     
     return () => {
       window.removeEventListener('scroll', throttledScrollHandler);
+      window.removeEventListener('resize', handleScroll);
     };
   }, []);
 
@@ -100,6 +107,7 @@ const Navbar = () => {
   // Enhanced smooth scrolling with optimized performance
   const handleNavLinkClick = (target) => {
     // Use the optimized scrollToElement function
+    // On mobile, browser default scroll behavior is used by smoothScroll.js
     scrollToElement(`#${target}`, 80);
     if (menuOpen) setMenuOpen(false);
   };

@@ -4,9 +4,8 @@
 
 /* Custom Styles */
 html {
-  scroll-behavior: smooth;
-  height: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
   /* Prevent rubber band effect on Safari and some mobile browsers */
   overscroll-behavior: none;
 }
@@ -15,6 +14,7 @@ body {
   @apply bg-gradient-to-b from-dark to-gray-900 text-light min-h-screen;
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
+  overflow-y: auto;
   /* Improve scrolling smoothness */
   overscroll-behavior-y: none;
   position: relative;
@@ -51,8 +51,7 @@ body {
   height: 100%;
   background: linear-gradient(90deg, theme('colors.primary.500'), theme('colors.secondary.500'));
   width: 0%;
-  /* Make the transition smoother */
-  transition: width 0.08s linear;
+  /* Do NOT add transition here - it's controlled by JavaScript */
   /* Force GPU acceleration */
   transform: translateZ(0);
   will-change: width;
@@ -86,10 +85,8 @@ body {
 /* Section classes to prevent layout shifts */
 section {
   position: relative;
-  /* Prevent content jumps */
-  contain: content;
-  /* Optional: Add paint containment for better performance */
-  contain: paint;
+  /* Prevent content jumps but don't use contain as it interferes with scroll animations */
+  /* contain: content; */
 }
 
 /* Disable scroll snap which can cause jumpy scrolling */
@@ -108,95 +105,12 @@ section {
   }
 }
 
-/* Enhanced smooth scrolling container */
-.smooth-scroll-container {
-  will-change: transform;
-  transition: transform 0.1s cubic-bezier(0.23, 1, 0.32, 1);
-  position: relative;
-}
-
-/* Scroll progress indicator */
-.scroll-progress-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  z-index: 1000;
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.scroll-progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, theme('colors.primary.500'), theme('colors.secondary.500'));
-  width: 0%;
-  transition: width 0.05s ease-out;
-}
-
-/* Improved animations for scroll reveals */
-.reveal-on-scroll {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), 
-              transform 0.8s cubic-bezier(0.5, 0, 0, 1);
-}
-
-.reveal-on-scroll.active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Smoother anchor link behavior */
-[data-anchor-link] {
-  scroll-margin-top: 100px;
-}
-
 /* Loading state */
 .loading {
   cursor: wait;
 }
 
-/* Enhanced scrollbar for better user experience */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
 
-::-webkit-scrollbar-track {
-  @apply bg-dark;
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-::-webkit-scrollbar-thumb {
-  @apply rounded-full;
-  background-image: linear-gradient(to bottom, theme('colors.primary.500'), theme('colors.secondary.600'));
-  border: 2px solid transparent;
-  background-clip: content-box;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-image: linear-gradient(to bottom, theme('colors.primary.400'), theme('colors.secondary.500'));
-}
-
-::-webkit-scrollbar-corner {
-  background-color: transparent;
-}
-
-/* Scroll snap for major sections */
-@media (min-width: 1024px) {
-  .scroll-snap-container {
-    height: 100vh;
-    overflow-y: scroll;
-    scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
-  }
-
-  .scroll-snap-section {
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-  }
-}
 
 /* Improved transition speeds for smoother experience */
 .section-transition {
