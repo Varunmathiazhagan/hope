@@ -6,8 +6,8 @@
 html {
   overflow-x: hidden;
   overflow-y: auto;
-  /* Prevent rubber band effect on Safari and some mobile browsers */
-  overscroll-behavior: none;
+  /* Allow normal scroll behavior for mouse wheel and touch */
+  overscroll-behavior: auto;
 }
 
 body {
@@ -15,8 +15,8 @@ body {
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
   overflow-y: auto;
-  /* Improve scrolling smoothness */
-  overscroll-behavior-y: none;
+  /* Allow normal scroll behavior for mouse wheel and touch */
+  overscroll-behavior-y: auto;
   position: relative;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
